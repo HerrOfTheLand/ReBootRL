@@ -31,25 +31,29 @@ Module ReBoot
         Dim Entity As Entity
     End Structure
     Sub ProcessText(ParamArray strings As String())
-        Console.WriteLine("+--------------------------------")
+        Console.WriteLine("╠════════════════════════════════════════════════════════════════►")
         For i = 0 To strings.Length - 1
-            Console.WriteLine($"| {strings(i)}")
+            Console.WriteLine($"║ {strings(i)}")
         Next
     End Sub
     Sub ProcessMap(cameraX As Integer, cameraY As Integer, map As Cell(,))
         Dim screen(8, 8) As Char
-        Console.WriteLine("+--------------------------------")
-        Console.WriteLine("| +---------+")
+        Console.WriteLine("╠════════════════════════════════════════════════════════════════►")
+        Console.WriteLine("║ ┌─────────┐")
         For y = cameraY To cameraY + 8
             For x = cameraX To cameraX + 8
 
             Next
         Next
         For y = cameraY To cameraY + 8
-            Console.Write("| |")
+            Console.Write("║ │")
             For x = cameraX To cameraX + 8
                 If x < 0 OrElse y < 0 OrElse x > map.GetUpperBound(1) OrElse y > map.GetUpperBound(0) Then
-                    Console.Write("X")
+                    If (x + y) Mod 2 = 0 Then
+                        Console.Write("┼")
+                    Else
+                        Console.Write("╬")
+                    End If
                     Continue For
                 End If
                 If map(y, x).Entity.Glyph <> Chr(0) Then
@@ -62,20 +66,20 @@ Module ReBoot
                     Case TerrarianType.Ground
                         Console.Write(".")
                     Case TerrarianType.Wall
-                        Console.Write("#")
+                        Console.Write("█")
                     Case Else
                         Console.Write("?")
                 End Select
             Next
-            Console.WriteLine("|")
+            Console.WriteLine("│")
         Next
-        Console.WriteLine("| +---------+")
+        Console.WriteLine("║ └─────────┘")
     End Sub
     Function ProcessStringInput(title As String) As String
-        Console.WriteLine($"+--------------------------------")
-        Console.WriteLine($"| {title}:")
+        Console.WriteLine($"╠════════════════════════════════════════════════════════════════►")
+        Console.WriteLine($"║ {title}:")
         Do
-            Console.Write("| >>> ")
+            Console.Write("╟─► ")
             Dim input As String = Console.ReadLine().Trim()
             If input = "" Then
                 Continue Do
@@ -85,13 +89,13 @@ Module ReBoot
         Return Console.ReadLine()
     End Function
     Function ProcessDialog(title As String, ParamArray entries As String()) As Integer
-        Console.WriteLine($"+--------------------------------")
-        Console.WriteLine($"| {title}:")
+        Console.WriteLine($"╠════════════════════════════════════════════════════════════════►")
+        Console.WriteLine($"║ {title}:")
         For i = 0 To entries.Length - 1
-            Console.WriteLine($"| {i + 1}) {entries(i)}")
+            Console.WriteLine($"║ {i + 1}) {entries(i)}")
         Next
         Do
-            Console.Write("| >>> ")
+            Console.Write("╟─► ")
             Dim choose As Integer
             Dim input As String = Console.ReadLine().Trim().ToLower()
             If input = "" Then
@@ -101,7 +105,7 @@ Module ReBoot
                 choose = Array.IndexOf(Array.ConvertAll(entries, Function(str) str.ToLower()), input) + 1
             End If
             If choose > entries.Length OrElse choose < 1 Then
-                Console.WriteLine("| Unrecognized opinion")
+                Console.WriteLine("║ Unrecognized opinion")
                 Continue Do
             End If
             Return choose
@@ -152,7 +156,8 @@ Module ReBoot
         Return command
     End Function
     Sub Main()
-        ProcessText("Welcome to the world of Miretylis")
+        Console.WriteLine("╔════════════════════════════════════════════════════════════════►")
+        Console.WriteLine("║ Welcome to the world of Miretylis")
         Do
             Dim savedGame As XElement
             Try
@@ -188,22 +193,23 @@ Module ReBoot
                 Case 2
                     Dim playerX As Integer = Integer.Parse(savedGame.<character>.<position>.<x>.Value)
                     Dim playerY As Integer = Integer.Parse(savedGame.<character>.<position>.<y>.Value)
-                    Dim map(3, 3) As Cell
+                    Dim map(10, 10) As Cell
                     map(1, 1).Terrarian = TerrarianType.Wall
                     map(playerY, playerX).Entity.Glyph = "@"c
                     Do
                         Dim command As Command = ParseCommand(ProcessStringInput("Command"))
                         Select Case command.Type
                             Case CommandType.Help
-                                ProcessText("Command | Result",
-                                            "--------+--------",
-                                            "help    | Display this help",
-                                            "quit    | Quit to main menu (game will be lost)",
-                                            "save    | Save game",
-                                            "look    | Display local map",
-                                            "walk    | Step Step towards direction or pass if in place",
-                                            "--------+--------",
-                                            "Directions are `around`, `up`, `down`, `left`, and `right`")
+                                ProcessText("┌─────────┬────────────────────────────────────────────┐",
+                                            "│ Command │ Action                                     │",
+                                            "├─────────┼────────────────────────────────────────────┤",
+                                            "│ help    │ Display the help                           │",
+                                            "│ quit    │ Quit to the main menu (save will be lost)  │",
+                                            "│ save    │ Save the game                              │",
+                                            "│ look    │ Display the local map                      │",
+                                            "│ walk    │ Step towards direction or pass if in place │",
+                                            "└─────────┴────────────────────────────────────────────┘",
+                                            "Directions are [around](default), [up], [down], [left], and [right]")
                             Case CommandType.Quit
                                 ProcessText("Quiting to main menu...")
                                 Exit Do
@@ -286,25 +292,25 @@ Module ReBoot
                     Loop
                 Case 3
                     ProcessText("ReBoot, Text-based technofantasy roguelike.",
-                                "Version 0.1.0 'The Second day'", ' next 'The Beauty of words'
-                                "-------------------------------",
+                                "Version 0.1.0 'The Beauty of words'", ' next 'The Tricky Dungeon'
+                                "─═─═─═─═─═─═─═─═─═─═─═─═─═─═─═─",
                                 "Interaction:",
-                                "  Command is an instruction in the format :`Base` `Direction` `Times`:",
-                                "  Enter dialogue option or its number to choose it",
-                                "  Commands and dialogue opinions are case-insesitive",
+                                "• Command is an instruction in the format :`Base` `Direction` `Times`:",
+                                "• Enter dialogue option or its number to choose it",
+                                "• Commands and dialogue opinions are case-insesitive",
                                 "Story:",
-                                "  At the beginning there were humans, demons, and angels.",
-                                "  Demons and angels were in the holy war, and the battleground was a human world, the Gaia.",
-                                "  Neither demons nor angels couldn't win in this war of madness.",
-                                "  Much blood were letted, much lives were faded...",
-                                "  But there were an angel and a demon which were frazzled up with this war.",
-                                "  They came to the Gaia and with humans founded a brand new kingdom.",
-                                "  The Great kingdom Lezetill, where noone would got any fear.",
-                                "  But there were another plague, alongside with the holy war.",
-                                "  Magical beasts full of power and madness, the 'Death beasts'...")
+                                "• At the beginning there were humans, demons, and angels.",
+                                "• Demons and angels were in the holy war, and the battleground was a human world, the Gaia.",
+                                "• Neither demons nor angels couldn't win in this war of madness.",
+                                "• Much blood were letted, much lives were faded...",
+                                "• But there were an angel and a demon which were frazzled up with this war.",
+                                "• They came to the Gaia and with humans founded a brand new kingdom.",
+                                "• The Great kingdom Lezetill, where noone would got any fear.",
+                                "• But there were another plague, alongside with the holy war.",
+                                "• Magical beasts, all full of power and madness, the 'Death beasts'...")
                 Case 4
                     ProcessText("See you later")
-                    Console.Write("+--------------------------------")
+                    Console.Write("╚════════════════════════════════════════════════════════════════►")
                     Console.ReadKey()
                     Exit Sub
             End Select
