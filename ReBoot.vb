@@ -77,7 +77,7 @@ Module ReBoot
             End Try
             Select Case ProcessDialog("Menu", "Create Character", $"Continue as [{savedGame.<character>.<name>.Value}]", "Intro", "Quit")
                 Case 1
-                    Dim character As XElement =
+                    Dim saveGame As XElement =
                         <save>
                             <character>
                                 <name><%= ProcessStringInput("Name") %></name>
@@ -87,12 +87,12 @@ Module ReBoot
                                 </position>
                             </character>
                         </save>
-                    character.Save("save.xml")
+                    saveGame.Save("save.xml")
                     ProcessText("Character is created")
                     Continue Do
                 Case 2
-                    Dim playerX As Integer = 3
-                    Dim playerY As Integer = 3
+                    Dim playerX As Integer = Integer.Parse(savedGame.<character>.<position>.<x>.Value)
+                    Dim playerY As Integer = Integer.Parse(savedGame.<character>.<position>.<y>.Value)
                     Do
                         Select Case ProcessStringInput("Command [type help for help]").ToLower()
                             Case "help"
@@ -112,33 +112,42 @@ Module ReBoot
                             Case "move up", "up"
                                 If playerY - 1 < 1 Then
                                     ProcessText("Blocked...")
+                                    Continue Do
                                 Else
                                     playerY -= 1
+                                    savedGame.<character>.<position>.<y>.Value = playerY.ToString()
                                     ProcessText("You step up")
                                 End If
                             Case "move down", "down"
                                 If playerY + 1 > 5 Then
                                     ProcessText("Blocked...")
+                                    Continue Do
                                 Else
                                     playerY += 1
+                                    savedGame.<character>.<position>.<y>.Value = playerY.ToString()
                                     ProcessText("You step down")
                                 End If
                             Case "move left", "left"
                                 If playerX - 1 < 1 Then
                                     ProcessText("Blocked...")
+                                    Continue Do
                                 Else
                                     playerX -= 1
+                                    savedGame.<character>.<position>.<x>.Value = playerX.ToString()
                                     ProcessText("You step left")
                                 End If
                             Case "move right", "right"
                                 If playerX + 1 > 5 Then
                                     ProcessText("Blocked...")
+                                    Continue Do
                                 Else
                                     playerX += 1
+                                    savedGame.<character>.<position>.<x>.Value = playerX.ToString()
                                     ProcessText("You step right")
                                 End If
                             Case "quit"
                                 ProcessText("Quiting to main menu...")
+                                savedGame.Save("save.xml")
                                 Exit Do
                             Case Else
                                 ProcessText("Unknown command")
@@ -148,7 +157,7 @@ Module ReBoot
                     Loop
                 Case 3
                     ProcessText("ReBoot, Text-based technofantasy roguelike.",
-                                "Version 0.0.1 'The Cretion art'",
+                                "Version 0.0.2 'The Cretion art'", ' next 'The Second day'
                                 "-------------------------------",
                                 "Interaction:",
                                 "  Enter comand to execute it",
