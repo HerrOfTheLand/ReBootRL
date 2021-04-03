@@ -1,4 +1,23 @@
 Module ReBoot
+    Enum CommandType
+        Help
+        Quit
+        Save
+        Look
+        Walk
+    End Enum
+    Enum Direction
+        Around
+        Up
+        Down
+        Left
+        Right
+    End Enum
+    Structure Command
+        Dim Type As CommandType
+        Dim Direction As Direction
+        Dim Times As Integer
+    End Structure
     Enum TerrarianType
         None
         Ground
@@ -26,7 +45,7 @@ Module ReBoot
 
             Next
         Next
-            For y = cameraY To cameraY + 8
+        For y = cameraY To cameraY + 8
             Console.Write("| |")
             For x = cameraX To cameraX + 8
                 If x < 0 OrElse y < 0 OrElse x > map.GetUpperBound(1) OrElse y > map.GetUpperBound(0) Then
@@ -88,6 +107,50 @@ Module ReBoot
             Return choose
         Loop
     End Function
+    Function ParseCommand(toParse As String) As Command
+        Dim command As Command
+        command.Times = 1
+        If toParse.Trim() = "" Then
+            Return command
+        End If
+        Dim words() As String = toParse.Trim().Split()
+        Select Case words(0).ToLower()
+            Case "quit"
+                command.Type = CommandType.Quit
+            Case "save"
+                command.Type = CommandType.Save
+            Case "look"
+                command.Type = CommandType.Look
+            Case "walk"
+                command.Type = CommandType.Walk
+            Case Else
+                command.Type = CommandType.Help
+        End Select
+        If words.Length < 2 Then
+            Return command
+        End If
+        Select Case words(1).ToLower()
+            Case "around"
+                command.Direction = Direction.Around
+            Case "up"
+                command.Direction = Direction.Up
+            Case "down"
+                command.Direction = Direction.Down
+            Case "left"
+                command.Direction = Direction.Left
+            Case "right"
+                command.Direction = Direction.Right
+            Case Else
+                command.Type = CommandType.Help
+        End Select
+        If words.Length < 3 Then
+            Return command
+        End If
+        If Not Integer.TryParse(words(2), command.Times) OrElse command.Times < 1 Then
+            command.Times = 1
+        End If
+        Return command
+    End Function
     Sub Main()
         ProcessText("Welcome to the world of Miretylis")
         Do
@@ -129,106 +192,106 @@ Module ReBoot
                     map(1, 1).Terrarian = TerrarianType.Wall
                     map(playerY, playerX).Entity.Glyph = "@"c
                     Do
-                        Select Case ProcessStringInput("Command [type help for help]").ToLower()
-                            Case "help"
-                                ProcessText("Command      | Result",
-                                            "-------------+--------",
-                                            "help         | Display this help",
-                                            "quit         | Quit to main menu (game will be lost)",
-                                            "save         | Save game",
-                                            "look         | Display local map",
-                                            "look up      | Display local map towards up",
-                                            "look down    | Display local map towards down",
-                                            "look left    | Display local map towards left",
-                                            "look right   | Display local map towards right",
-                                            "[move] up    | Step up",
-                                            "[move] down  | Step down",
-                                            "[move] left  | Step left",
-                                            "[move] right | Step right")
-                                Continue Do
-                            Case "look"
-                                ProcessMap(playerX - 4, playerY - 4, map)
-                                Continue Do
-                            Case "look up"
-                                ProcessMap(playerX - 4, playerY - 8, map)
-                                Continue Do
-                            Case "look down"
-                                ProcessMap(playerX - 4, playerY, map)
-                                Continue Do
-                            Case "look left"
-                                ProcessMap(playerX - 8, playerY - 4, map)
-                                Continue Do
-                            Case "look right"
-                                ProcessMap(playerX, playerY - 4, map)
-                                Continue Do
-                            Case "move up", "up"
-                                If playerY < 1 OrElse map(playerY - 1, playerX).Terrarian = TerrarianType.Wall Then
-                                    ProcessText("Blocked...")
-                                    Continue Do
-                                Else
-                                    map(playerY, playerX).Entity.Glyph = Chr(0)
-                                    playerY -= 1
-                                    map(playerY, playerX).Entity.Glyph = "@"c
-                                    savedGame.<character>.<position>.<y>.Value = playerY.ToString()
-                                    ProcessText("You step up")
-                                End If
-                            Case "move down", "down"
-                                If playerY > map.GetUpperBound(0) - 1 OrElse map(playerY + 1, playerX).Terrarian = TerrarianType.Wall Then
-                                    ProcessText("Blocked...")
-                                    Continue Do
-                                Else
-                                    map(playerY, playerX).Entity.Glyph = Chr(0)
-                                    playerY += 1
-                                    map(playerY, playerX).Entity.Glyph = "@"c
-                                    savedGame.<character>.<position>.<y>.Value = playerY.ToString()
-                                    ProcessText("You step down")
-                                End If
-                            Case "move left", "left"
-                                If playerX < 1 OrElse map(playerY, playerX - 1).Terrarian = TerrarianType.Wall Then
-                                    ProcessText("Blocked...")
-                                    Continue Do
-                                Else
-                                    map(playerY, playerX).Entity.Glyph = Chr(0)
-                                    playerX -= 1
-                                    map(playerY, playerX).Entity.Glyph = "@"c
-                                    savedGame.<character>.<position>.<x>.Value = playerX.ToString()
-                                    ProcessText("You step left")
-                                End If
-                            Case "move right", "right"
-                                If playerX > map.GetUpperBound(1) - 1 OrElse map(playerY, playerX + 1).Terrarian = TerrarianType.Wall Then
-                                    ProcessText("Blocked...")
-                                    Continue Do
-                                Else
-                                    map(playerY, playerX).Entity.Glyph = Chr(0)
-                                    playerX += 1
-                                    map(playerY, playerX).Entity.Glyph = "@"c
-                                    savedGame.<character>.<position>.<x>.Value = playerX.ToString()
-                                    ProcessText("You step right")
-                                End If
-                            Case "save"
-                                ProcessText("Saving the game...")
-                                savedGame.Save("save.xml")
-                                Continue Do
-                            Case "quit"
+                        Dim command As Command = ParseCommand(ProcessStringInput("Command"))
+                        Select Case command.Type
+                            Case CommandType.Help
+                                ProcessText("Command | Result",
+                                            "--------+--------",
+                                            "help    | Display this help",
+                                            "quit    | Quit to main menu (game will be lost)",
+                                            "save    | Save game",
+                                            "look    | Display local map",
+                                            "walk    | Step Step towards direction or pass if in place",
+                                            "--------+--------",
+                                            "Directions are `around`, `up`, `down`, `left`, and `right`")
+                            Case CommandType.Quit
                                 ProcessText("Quiting to main menu...")
                                 Exit Do
-                            Case "d"
-                                ProcessText("Debug", $"X: {playerX}", $"Y: {playerY}")
-                            Case Else
-                                ProcessText("Unknown command")
-                                Continue Do
+                            Case CommandType.Save
+                                ProcessText("Saving the game...")
+                                savedGame.Save("save.xml")
+                            Case CommandType.Look
+                                Select Case command.Direction
+                                    Case Direction.Around
+                                        ProcessMap(playerX - 4, playerY - 4, map)
+                                    Case Direction.Up
+                                        ProcessMap(playerX - 4, playerY - 8, map)
+                                    Case Direction.Down
+                                        ProcessMap(playerX - 4, playerY, map)
+                                    Case Direction.Left
+                                        ProcessMap(playerX - 8, playerY - 4, map)
+                                    Case Direction.Right
+                                        ProcessMap(playerX, playerY - 4, map)
+                                End Select
+                            Case CommandType.Walk
+                                Select Case command.Direction
+                                    Case Direction.Around
+                                        For i = 1 To command.Times
+                                            ProcessText("Do nothing")
+                                        Next
+                                    Case Direction.Up
+                                        For i = 1 To command.Times
+                                            If playerY < 1 OrElse map(playerY - 1, playerX).Terrarian = TerrarianType.Wall Then
+                                                ProcessText("Blocked...")
+                                                Exit For
+                                            Else
+                                                map(playerY, playerX).Entity.Glyph = Chr(0)
+                                                playerY -= 1
+                                                map(playerY, playerX).Entity.Glyph = "@"c
+                                                savedGame.<character>.<position>.<y>.Value = playerY.ToString()
+                                                ProcessText("You Stept up")
+                                            End If
+                                        Next
+                                    Case Direction.Down
+                                        For i = 1 To command.Times
+                                            If playerY > map.GetUpperBound(0) - 1 OrElse map(playerY + 1, playerX).Terrarian = TerrarianType.Wall Then
+                                                ProcessText("Blocked...")
+                                                Exit For
+                                            Else
+                                                map(playerY, playerX).Entity.Glyph = Chr(0)
+                                                playerY += 1
+                                                map(playerY, playerX).Entity.Glyph = "@"c
+                                                savedGame.<character>.<position>.<y>.Value = playerY.ToString()
+                                                ProcessText("You Step down")
+                                            End If
+                                        Next
+                                    Case Direction.Left
+                                        For i = 1 To command.Times
+                                            If playerX < 1 OrElse map(playerY, playerX - 1).Terrarian = TerrarianType.Wall Then
+                                                ProcessText("Blocked...")
+                                                Exit For
+                                            Else
+                                                map(playerY, playerX).Entity.Glyph = Chr(0)
+                                                playerX -= 1
+                                                map(playerY, playerX).Entity.Glyph = "@"c
+                                                savedGame.<character>.<position>.<x>.Value = playerX.ToString()
+                                                ProcessText("You Step left")
+                                            End If
+                                        Next
+                                    Case Direction.Right
+                                        For i = 1 To command.Times
+                                            If playerX > map.GetUpperBound(1) - 1 OrElse map(playerY, playerX + 1).Terrarian = TerrarianType.Wall Then
+                                                ProcessText("Blocked...")
+                                                Exit For
+                                            Else
+                                                map(playerY, playerX).Entity.Glyph = Chr(0)
+                                                playerX += 1
+                                                map(playerY, playerX).Entity.Glyph = "@"c
+                                                savedGame.<character>.<position>.<x>.Value = playerX.ToString()
+                                                ProcessText("You Step right")
+                                            End If
+                                        Next
+                                End Select
                         End Select
-                        Console.WriteLine("| Time runs")
                     Loop
                 Case 3
                     ProcessText("ReBoot, Text-based technofantasy roguelike.",
-                                "Version 0.0.3 'The Cretion art'", ' next 'The Second day'
+                                "Version 0.1.0 'The Second day'", ' next 'The Beauty of words'
                                 "-------------------------------",
                                 "Interaction:",
-                                "  Enter comand to execute it",
+                                "  Command is an instruction in the format :`Base` `Direction` `Times`:",
                                 "  Enter dialogue option or its number to choose it",
                                 "  Commands and dialogue opinions are case-insesitive",
-                                "  Type 'help' to get help",
                                 "Story:",
                                 "  At the beginning there were humans, demons, and angels.",
                                 "  Demons and angels were in the holy war, and the battleground was a human world, the Gaia.",
